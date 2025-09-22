@@ -1,10 +1,32 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
+from django.contrib.auth.models import User
 
 from .models import Transaction, Category
-from .serializer import TransactionSerializer, CategorySerializer
+from .serializer import TransactionSerializer, CategorySerializer, UserSerializer
 
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    a viewset to handle User registration and management
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.AllowAny()]
+        elif self.action == 'list':
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return User.objects.none()
+        if user.is_staff:
+            return User.objects.all()
+        return User.objects.filter(username=user)
 
 # Create your views here.
 class CategoryViewSet(viewsets.ModelViewSet):
