@@ -22,6 +22,7 @@ from transactions import views
 
 router = routers.DefaultRouter()
 router.register(r'transactions', views.TransactionViewSet)
+router.register(r'categories', views.CategoryViewSet),
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(router.urls)),
