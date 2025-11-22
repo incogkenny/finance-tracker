@@ -13,44 +13,57 @@ interface ProtectedRouteProps {
 function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
-  const refreshToken = async () => {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN);
-    try {
-      const response = await api.post("/api/token/refresh/", {
-        refresh: refreshToken,
-      });
-      if (response.status === 200) {
-        localStorage.setItem(ACCESS_TOKEN, response.data.access);
-        setIsAuthorized(true);
-      } else {
-        setIsAuthorized(false);
-      }
-    } catch (error) {
-      console.log(error);
-      setIsAuthorized(false);
-    }
-  };
-
-  const auth = async () => {
-    const token = localStorage.getItem(ACCESS_TOKEN);
-    if (!token) {
-      setIsAuthorized(false);
-      return;
-    }
-    const decoded = jwtDecode<{ exp?: number }>(token);
-    const tokenExpiration = decoded.exp;
-    const now = Date.now() / 1000;
-
-    if (!tokenExpiration || tokenExpiration < now) {
-      await refreshToken();
-    } else {
-      setIsAuthorized(true);
-    }
-  };
-
   useEffect(() => {
-    auth().catch(() => setIsAuthorized(false));
-  });
+    let mounted = true;
+
+    const refreshToken = async () => {
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN);
+      try {
+        const response = await api.post("/api/token/refresh/", {
+          refresh: refreshToken,
+        });
+        if (!mounted) return;
+        if (response.status === 200) {
+          localStorage.setItem(ACCESS_TOKEN, response.data.access);
+          setIsAuthorized(true);
+        } else {
+          setIsAuthorized(false);
+        }
+      } catch (error) {
+        console.log(error);
+        if (mounted) setIsAuthorized(false);
+      }
+    };
+
+    const auth = async () => {
+      const token = localStorage.getItem(ACCESS_TOKEN);
+      if (!token) {
+        if (mounted) setIsAuthorized(false);
+        return;
+      }
+      const decoded = jwtDecode<{ exp?: number }>(token);
+      const tokenExpiration = decoded.exp;
+      const now = Date.now() / 1000;
+
+      if (!tokenExpiration || tokenExpiration < now) {
+        await refreshToken();
+      } else {
+        if (mounted) setIsAuthorized(true);
+      }
+    };
+
+    (async () => {
+      try {
+        await auth();
+      } catch {
+        if (mounted) setIsAuthorized(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   if (isAuthorized === null) {
     return <div>Loading...</div>;
