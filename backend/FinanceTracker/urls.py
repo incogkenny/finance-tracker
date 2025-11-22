@@ -25,9 +25,9 @@ from rest_framework_simplejwt.views import (
 from transactions import views
 
 router = routers.DefaultRouter()
-router.register(r'transactions', views.TransactionViewSet)
-router.register(r'categories', views.CategoryViewSet),
-router.register(r'users', views.UserViewSet),
+router.register(r'api/transactions', views.TransactionViewSet)
+router.register(r'api/categories', views.CategoryViewSet),
+router.register(r'api/users', views.UserViewSet),
 urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
