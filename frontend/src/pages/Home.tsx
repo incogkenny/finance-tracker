@@ -1,19 +1,30 @@
 import { useState, useEffect, type FormEvent } from "react";
 import api from "../api";
 import type { AxiosError } from "axios";
+import Transaction from "../components/Transaction.tsx";
+import "../styles/Home.css";
 
 type Category = {
   id: number;
   name: string;
 };
+type Transaction = {
+  id: number;
+  transaction_type: string;
+  category_id: number;
+  amount: number;
+  notes: string;
+  date: string;
+  created: string;
+};
 
 function Home() {
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [category, setCategory] = useState<number | string>("");
-  const [note, setNote] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
   const [type, setType] = useState<string>("INCOME");
-  const [amount, setAmount] = useState<string | number>("");
+  const [amount, setAmount] = useState<string>("");
   const [date, setDate] = useState<string>("");
 
   const getTransactions = () => {
@@ -38,7 +49,7 @@ function Home() {
       .catch((error) => console.error("Failed to load categories: " + error));
   };
 
-  const deleteTransaction = (id: string) => {
+  const deleteTransaction = (id: number) => {
     api
       .delete(`/api/transactions/${id}/`)
       .then((response) => {
@@ -59,7 +70,7 @@ function Home() {
       category_id: category === "" ? null : Number(category), // null if none
       amount: amount === "" ? null : parseFloat(amount), // numeric
       date,
-      notes: note, // match serializer field
+      notes: notes, // match serializer field
     };
 
     try {
@@ -81,7 +92,14 @@ function Home() {
 
   return (
     <div>
-      <h2>Transactions</h2>
+      <h2 className={"transaction-section"}>Transactions</h2>
+      {transactions.map((transaction) => (
+        <Transaction
+          transaction={transaction}
+          onDelete={deleteTransaction}
+          key={transaction.id}
+        ></Transaction>
+      ))}
       <h2>Add Transaction</h2>
       <form onSubmit={createTransaction}>
         <label htmlFor={"type"}>Type: </label>
@@ -147,8 +165,8 @@ function Home() {
         <textarea
           id={"note"}
           required={false}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
         />
         <br />
         <button type="submit">Add Transaction</button>

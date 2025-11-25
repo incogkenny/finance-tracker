@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import api from "../api.ts";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants.ts";
-import "../styles/forms.css";
+import "../styles/Form.css";
 
 interface FormProps {
   route: string;
