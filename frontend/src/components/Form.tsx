@@ -15,7 +15,7 @@ function Form({ route, method }: FormProps) {
   const navigate = useNavigate();
 
   const name = method === "login" ? "Login" : "Register";
-  const handleSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setLoading(true);
     e.preventDefault(); // prevents reloading page when submitting form
 
