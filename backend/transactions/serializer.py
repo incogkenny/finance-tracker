@@ -36,6 +36,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = ["id", "transaction_type", "amount", "date", "notes", "category", "category_id", "user"]
+        extra_kwargs = {"category": {"required": False}}
 
 
 
