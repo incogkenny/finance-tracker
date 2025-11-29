@@ -3,11 +3,13 @@ import api from "../api.ts";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants.ts";
 import "../styles/Form.css";
+import LoadingIndicator from "./LoadingIndicator.tsx";
 
 interface FormProps {
   route: string;
   method: string;
 }
+// Used for both Login and Register pages
 function Form({ route, method }: FormProps) {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -55,6 +57,7 @@ function Form({ route, method }: FormProps) {
       <button className={"form-button"} type={"submit"}>
         {name}
       </button>
+      {loading && <LoadingIndicator />}
     </form>
   );
 }
