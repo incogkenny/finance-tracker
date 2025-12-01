@@ -34,6 +34,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/*<Route*/}
+        {/*  path={"/transactions"}*/}
+        {/*  element={*/}
+        {/*    <ProtectedRoute>*/}
+        {/*      <Transactions />*/}
+        {/*    </ProtectedRoute>*/}
+        {/*  }*/}
+        {/*/>*/}
+        {/*<Route path={"/analytics"} element={<Analytics />} />*/}
+        {/*<Route path={"/categories"} element={<Categories />} />*/}
         <Route path={"/login"} element={<Login />} />
         <Route path={"/logout"} element={<Logout />}></Route>
         <Route path={"/register"} element={<RegisterAndLogout />} />
