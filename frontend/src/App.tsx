@@ -11,6 +11,10 @@ import Register from "./pages/Register.tsx";
 import Home from "./pages/Home.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
+import MainLayout from "@/components/MainLayout.tsx";
+import { Transactions } from "@/pages/Transactions.tsx";
+import { Analytics } from "@/pages/Analytics.tsx";
+import { Categories } from "@/pages/Categories.tsx";
 
 function Logout() {
   localStorage.clear();
@@ -30,20 +34,43 @@ function App() {
           path={"/"}
           element={
             <ProtectedRoute>
-              <Home />
+              <MainLayout>
+                <Home />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
-        {/*<Route*/}
-        {/*  path={"/transactions"}*/}
-        {/*  element={*/}
-        {/*    <ProtectedRoute>*/}
-        {/*      <Transactions />*/}
-        {/*    </ProtectedRoute>*/}
-        {/*  }*/}
-        {/*/>*/}
-        {/*<Route path={"/analytics"} element={<Analytics />} />*/}
-        {/*<Route path={"/categories"} element={<Categories />} />*/}
+        <Route
+          path={"/transactions"}
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Transactions />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={"/analytics"}
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Analytics />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={"/categories"}
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Categories />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route path={"/login"} element={<Login />} />
         <Route path={"/logout"} element={<Logout />}></Route>
         <Route path={"/register"} element={<RegisterAndLogout />} />

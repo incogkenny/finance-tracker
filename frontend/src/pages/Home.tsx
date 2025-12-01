@@ -1,8 +1,8 @@
 import { useState, useEffect, type FormEvent } from "react";
 import api from "../api";
 import type { AxiosError } from "axios";
-import Transaction from "../components/Transaction.tsx";
 import "../styles/Home.css";
+import Transaction from "../components/Transaction.tsx";
 
 type Category = {
   id: number;
@@ -91,8 +91,8 @@ function Home() {
   }, []);
 
   return (
-    <div>
-      <h2 className={"transaction-section"}>Transactions</h2>
+    <div className={"space-y-6"}>
+      <h2 className={"text-2xl font-semibold mb-2"}>Transactions</h2>
       {transactions.map((transaction) => (
         <Transaction
           transaction={transaction}

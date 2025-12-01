@@ -16,10 +16,14 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     let mounted = true;
 
     const refreshToken = async () => {
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN);
+      const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN);
+      if (!storedRefreshToken) {
+        if (mounted) setIsAuthorized(false);
+        return;
+      }
       try {
         const response = await api.post("/api/token/refresh/", {
-          refresh: refreshToken,
+          refresh: storedRefreshToken,
         });
         if (!mounted) return;
         if (response.status === 200) {
@@ -29,7 +33,7 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
           setIsAuthorized(false);
         }
       } catch (error) {
-        console.log(error);
+        console.log("Failed to refresh token:", error);
         if (mounted) setIsAuthorized(false);
       }
     };
@@ -40,14 +44,20 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
         if (mounted) setIsAuthorized(false);
         return;
       }
-      const decoded = jwtDecode<{ exp?: number }>(token);
-      const tokenExpiration = decoded.exp;
-      const now = Date.now() / 1000;
+      try {
+        const decoded = jwtDecode<{ exp?: number }>(token);
+        const now = Date.now() / 1000;
+        // access expired -> try refresh
 
-      if (!tokenExpiration || tokenExpiration < now) {
+        if (!decoded.exp || decoded.exp < now) {
+          await refreshToken();
+        } else {
+          if (mounted) setIsAuthorized(true);
+        }
+      } catch (err) {
+        console.log("Failed to decode access token:", err);
+        // invalid access token -> try refresh
         await refreshToken();
-      } else {
-        if (mounted) setIsAuthorized(true);
       }
     };
 
@@ -68,7 +78,7 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <div>Loading...</div>;
   }
 
-  return isAuthorized ? children : <Navigate to={"/login"} />;
+  return isAuthorized ? <>{children}</> : <Navigate to={"/login"} />;
 }
 
 export default ProtectedRoute;
