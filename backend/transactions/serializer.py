@@ -28,14 +28,16 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TransactionSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), source="category", write_only=True
+        queryset=Category.objects.all(),
+        required=False,
+        allow_null=True,
     )
 
     class Meta:
         model = Transaction
-        fields = ["id", "transaction_type", "amount", "date", "notes", "category", "category_id", "user"]
+        fields = ["id", "transaction_type", "amount", "date", "notes", "category_id", "user"]
+        extra_kwargs = {"user": {"write_only": True}}
 
 
 

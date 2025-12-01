@@ -1,7 +1,11 @@
+from logging import raiseExceptions
+
 from django.shortcuts import render
 from rest_framework import viewsets, status, permissions
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import Transaction, Category
 from .serializer import TransactionSerializer, CategorySerializer, UserSerializer
@@ -14,7 +18,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def get_permissions(self):
-        if self.action == 'create':
+        if self.action in ('register','login', 'create'):
             return [permissions.AllowAny()]
         elif self.action == 'list':
             return [permissions.IsAdminUser()]
@@ -27,6 +31,19 @@ class UserViewSet(viewsets.ModelViewSet):
         if user.is_staff:
             return User.objects.all()
         return User.objects.filter(username=user)
+
+    @action(detail=False, methods=['post'], url_path='register')
+    def register(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(self.get_serializer(user).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='login')
+    def login(self, request):
+        token_serialzer = TokenObtainPairSerializer(data=request.data)
+        token_serialzer.is_valid(raise_exception=True)
+        return Response(token_serialzer.validated_data, status=status.HTTP_200_OK)
 
 # Create your views here.
 class CategoryViewSet(viewsets.ModelViewSet):
