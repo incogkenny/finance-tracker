@@ -5,10 +5,9 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.models import User
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import Transaction, Category
-from .serializer import TransactionSerializer, CategorySerializer, UserSerializer
+from .serializer import TransactionSerializer, CategorySerializer, UserSerializer, CustomTokenObtainPairSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -41,9 +40,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='login')
     def login(self, request):
-        token_serialzer = TokenObtainPairSerializer(data=request.data)
-        token_serialzer.is_valid(raise_exception=True)
-        return Response(token_serialzer.validated_data, status=status.HTTP_200_OK)
+        token_serializer = CustomTokenObtainPairSerializer(data=request.data)
+        token_serializer.is_valid(raise_exception=True)
+        return Response(token_serializer.validated_data, status=status.HTTP_200_OK)
 
 # Create your views here.
 class CategoryViewSet(viewsets.ModelViewSet):
