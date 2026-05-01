@@ -36,6 +36,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PlusIcon } from "lucide-react";
+import { toast } from "sonner";
 
 type Category = {
   id: number;
@@ -66,7 +67,7 @@ function Home() {
     api
       .get("/api/transactions/")
       .then((res) => setTransactions(res.data))
-      .catch((error: AxiosError) => alert(error));
+      .catch((error: AxiosError) => toast.error("Failed to load transactions", { description: error.message }));
   };
 
   const getCategories = () => {
@@ -81,9 +82,9 @@ function Home() {
       .delete(`/api/transactions/${id}/`)
       .then((res) => {
         if (res.status === 204) getTransactions();
-        else alert("Failed to delete transaction");
+        else toast.error("Failed to delete transaction");
       })
-      .catch((error: AxiosError) => alert(error));
+      .catch((error: AxiosError) => toast.error("Failed to delete transaction", { description: error.message }));
   };
 
   const createTransaction = async (e: FormEvent) => {
@@ -107,6 +108,7 @@ function Home() {
         getTransactions();
       }
     } catch (err) {
+      toast.error("Failed to create transaction");
       console.error(err);
     }
   };
@@ -119,6 +121,22 @@ function Home() {
   const categoryName = (id: number | null) =>
     categories.find((c) => c.id === id)?.name ?? "—";
 
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const monthLabel = new Date().toLocaleString("en-GB", { month: "long", year: "numeric" });
+  const fmt = (n: number) =>
+    `£${Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const totalBalance = transactions.reduce(
+    (sum, t) => sum + (t.transaction_type === "INCOME" ? Number(t.amount) : -Number(t.amount)),
+    0
+  );
+  const incomeThisMonth = transactions
+    .filter((t) => t.transaction_type === "INCOME" && t.date.startsWith(currentMonth))
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+  const expensesThisMonth = transactions
+    .filter((t) => t.transaction_type === "EXPENSE" && t.date.startsWith(currentMonth))
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
   return (
     <div className="p-6 space-y-6">
       {/* Stat cards */}
@@ -130,8 +148,10 @@ function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">—</p>
-            <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
+            <p className={`text-2xl font-semibold ${totalBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {totalBalance < 0 ? "-" : ""}{fmt(totalBalance)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">All time</p>
           </CardContent>
         </Card>
         <Card>
@@ -141,8 +161,8 @@ function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-green-600">—</p>
-            <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
+            <p className="text-2xl font-semibold text-green-600">{fmt(incomeThisMonth)}</p>
+            <p className="text-xs text-muted-foreground mt-1">{monthLabel}</p>
           </CardContent>
         </Card>
         <Card>
@@ -152,8 +172,8 @@ function Home() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-red-600">—</p>
-            <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
+            <p className="text-2xl font-semibold text-red-600">{fmt(expensesThisMonth)}</p>
+            <p className="text-xs text-muted-foreground mt-1">{monthLabel}</p>
           </CardContent>
         </Card>
       </div>

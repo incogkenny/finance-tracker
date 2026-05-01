@@ -1,11 +1,10 @@
-// import react from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
-  // // Navigation
   Navigate,
 } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 import Login from "./pages/Login.tsx";
 import Register from "./pages/Register.tsx";
 import Home from "./pages/Home.tsx";
@@ -29,6 +28,7 @@ function RegisterAndLogout() {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster richColors position="bottom-right" />
       <Routes>
         <Route
           path={"/"}
