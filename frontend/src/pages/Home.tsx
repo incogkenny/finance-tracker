@@ -1,8 +1,41 @@
 import { useState, useEffect, type FormEvent } from "react";
 import api from "../api";
 import type { AxiosError } from "axios";
-import "../styles/Home.css";
 import Transaction from "../components/Transaction.tsx";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PlusIcon } from "lucide-react";
 
 type Category = {
   id: number;
@@ -11,7 +44,7 @@ type Category = {
 type Transaction = {
   id: number;
   transaction_type: string;
-  category_id: number;
+  category_id: number | null;
   amount: number;
   notes: string;
   date: string;
@@ -21,67 +54,60 @@ type Transaction = {
 function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [category, setCategory] = useState<number | string>("");
+  const [category, setCategory] = useState<string>("none");
   const [notes, setNotes] = useState<string>("");
   const [type, setType] = useState<string>("INCOME");
   const [amount, setAmount] = useState<string>("");
-  const [date, setDate] = useState<string>("");
+  const today = () => new Date().toISOString().split("T")[0];
+  const [date, setDate] = useState<string>(today());
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const getTransactions = () => {
     api
       .get("/api/transactions/")
-      .then((response) => response.data)
-      .then((data) => {
-        setTransactions(data);
-        console.log(data);
-      })
+      .then((res) => setTransactions(res.data))
       .catch((error: AxiosError) => alert(error));
   };
 
   const getCategories = () => {
     api
       .get("/api/categories/")
-      .then((response) => response.data)
-      .then((data: Category[]) => {
-        setCategories(data);
-        console.log(data);
-      })
-      .catch((error) => console.error("Failed to load categories: " + error));
+      .then((res) => setCategories(res.data))
+      .catch((error) => console.error("Failed to load categories:", error));
   };
 
   const deleteTransaction = (id: number) => {
     api
       .delete(`/api/transactions/${id}/`)
-      .then((response) => {
-        if (response.status === 204) alert("Transaction deleted");
+      .then((res) => {
+        if (res.status === 204) getTransactions();
         else alert("Failed to delete transaction");
-        getTransactions();
       })
-      .catch((error: AxiosError) => {
-        alert(error);
-      });
+      .catch((error: AxiosError) => alert(error));
   };
 
   const createTransaction = async (e: FormEvent) => {
     e.preventDefault();
-
     const payload = {
-      transaction_type: type, // match serializer field
-      category_id: category === "" ? null : Number(category), // null if none
-      amount: amount === "" ? null : parseFloat(amount), // numeric
+      transaction_type: type,
+      category_id: category === "none" ? null : Number(category),
+      amount: amount === "" ? null : parseFloat(amount),
       date,
-      notes: notes, // match serializer field
+      notes,
     };
-
     try {
-      const response = await api.post("/api/transactions/", payload);
-      if (response.status === 201) alert("Transaction created");
-      else alert("Failed to create transaction");
+      const res = await api.post("/api/transactions/", payload);
+      if (res.status === 201) {
+        setSheetOpen(false);
+        setAmount("");
+        setDate(today());
+        setNotes("");
+        setCategory("none");
+        setType("INCOME");
+        getTransactions();
+      }
     } catch (err) {
-      // show validation errors returned from DRF
-      console.log(err);
-    } finally {
-      getTransactions();
+      console.error(err);
     }
   };
 
@@ -90,87 +116,192 @@ function Home() {
     getCategories();
   }, []);
 
+  const categoryName = (id: number | null) =>
+    categories.find((c) => c.id === id)?.name ?? "—";
+
   return (
-    <div className={"space-y-6"}>
-      <h2 className={"text-2xl font-semibold mb-2"}>Transactions</h2>
-      {transactions.map((transaction) => (
-        <Transaction
-          transaction={transaction}
-          onDelete={deleteTransaction}
-          key={transaction.id}
-        ></Transaction>
-      ))}
-      <h2>Add Transaction</h2>
-      <form onSubmit={createTransaction}>
-        <label htmlFor={"type"}>Type: </label>
-        <br />
-        <select
-          id={"type"}
-          defaultValue={"INCOME"}
-          required={true}
-          onChange={(e) => setType(e.target.value)}
-        >
-          <option value={"INCOME"}>Income</option>
-          <option value={"EXPENSE"}>Expense</option>
-        </select>
+    <div className="p-6 space-y-6">
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">—</p>
+            <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Income This Month
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold text-green-600">—</p>
+            <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Expenses This Month
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold text-red-600">—</p>
+            <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
+          </CardContent>
+        </Card>
+      </div>
 
-        <br />
+      {/* Transactions table */}
+      <div className="rounded-lg border bg-card">
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <h2 className="font-semibold">Transactions</h2>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button size="sm">
+                <PlusIcon className="size-4 mr-1" />
+                Add Transaction
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Add Transaction</SheetTitle>
+                <SheetDescription>
+                  Record a new income or expense transaction.
+                </SheetDescription>
+              </SheetHeader>
+              <form
+                onSubmit={createTransaction}
+                className="flex flex-col flex-1 overflow-hidden"
+              >
+                <div className="flex-1 overflow-y-auto space-y-4 px-4 py-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="type">Type</Label>
+                    <Select value={type} onValueChange={setType}>
+                      <SelectTrigger id="type" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="INCOME">Income</SelectItem>
+                        <SelectItem value="EXPENSE">Expense</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-        <label htmlFor={"category"}>Category: </label>
-        <br />
-        <select
-          id={"category"}
-          value={category ?? ""}
-          onChange={(e) =>
-            setCategory(e.target.value === "" ? "" : Number(e.target.value))
-          }
-        >
-          <option value={""}>No Category (optional)</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger id="category" className="w-full">
+                        <SelectValue placeholder="No category (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No category</SelectItem>
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-        <br />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="amount">Amount</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm select-none">
+                        £
+                      </span>
+                      <Input
+                        id="amount"
+                        type="number"
+                        min="0.00"
+                        step="0.01"
+                        required
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0.00"
+                        className="pl-7"
+                      />
+                    </div>
+                  </div>
 
-        <label htmlFor={"amount"}>Amount:</label>
-        <br />
-        <input
-          type={"number"}
-          min={"0.00"}
-          max={"1000000000.00"}
-          id={"amount"}
-          required={true}
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      required
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                    />
+                  </div>
 
-        <br />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Input
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
 
-        <label htmlFor={"date"}>Date:</label>
-        <br />
-        <input
-          type={"date"}
-          id={"date"}
-          required={true}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-        <br />
+                <SheetFooter className="border-t px-4 py-4 gap-2">
+                  <SheetClose asChild>
+                    <Button type="button" variant="outline" className="flex-1">
+                      Cancel
+                    </Button>
+                  </SheetClose>
+                  <Button type="submit" className="flex-1">
+                    Add Transaction
+                  </Button>
+                </SheetFooter>
+              </form>
+            </SheetContent>
+          </Sheet>
+        </div>
 
-        <label htmlFor={"note"}>Notes:</label>
-        <br />
-        <textarea
-          id={"note"}
-          required={false}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-        <br />
-        <button type="submit">Add Transaction</button>
-      </form>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Notes</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {transactions.length === 0 ? (
+              <TableRow>
+                <td
+                  colSpan={6}
+                  className="py-10 text-center text-sm text-muted-foreground"
+                >
+                  No transactions yet. Add one to get started.
+                </td>
+              </TableRow>
+            ) : (
+              transactions.map((transaction) => (
+                <Transaction
+                  key={transaction.id}
+                  transaction={transaction}
+                  categoryName={categoryName(transaction.category_id)}
+                  onDelete={deleteTransaction}
+                />
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
