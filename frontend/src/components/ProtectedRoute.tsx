@@ -31,6 +31,7 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
           setIsAuthorized(true);
         } else {
           setIsAuthorized(false);
+          localStorage.clear()
         }
       } catch (error) {
         console.log("Failed to refresh token:", error);
