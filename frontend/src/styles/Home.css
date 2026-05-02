@@ -1,0 +1,94 @@
+/* Container for the whole page */
+div {
+  font-family: Arial, sans-serif;
+}
+
+/* Styles for the notes section */
+.transaction-section {
+  margin-bottom: 2rem;
+}
+
+.transaction-section h2 {
+  color: #333;
+  font-size: 24px;
+}
+
+/* Styles for individual transactions */
+.transaction {
+  background-color: #f9f9f9;
+  border-left: 5px solid #007bff;
+  margin: 10px 0;
+  padding: 10px 15px;
+  border-radius: 5px;
+}
+
+/* Styles for the form section */
+form {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: auto;
+}
+
+form h2 {
+  color: #333;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+form label {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+form input,
+form textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+
+form select {
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  background-color: #fff;
+  color: #333;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #555 50%),
+                    linear-gradient(135deg, #555 50%, transparent 50%),
+                    linear-gradient(to right, #ccc, #ccc);
+  background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px), 100% 0;
+  background-size: 5px 5px, 5px 5px, 1px 1.5em;
+  background-repeat: no-repeat;
+}
+
+form select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+
+form button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+form button[type="submit"]:hover {
+  background-color: #0056b3;
+}
