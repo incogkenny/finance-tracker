@@ -1,6 +1,3 @@
-from logging import raiseExceptions
-
-from django.shortcuts import render
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,6 +5,7 @@ from django.contrib.auth.models import User
 
 from .models import Transaction, Category
 from .serializer import TransactionSerializer, CategorySerializer, UserSerializer, CustomTokenObtainPairSerializer
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -17,7 +15,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def get_permissions(self):
-        if self.action in ('register','login', 'create'):
+        if self.action in ('register', 'login', 'create'):
             return [permissions.AllowAny()]
         elif self.action == 'list':
             return [permissions.IsAdminUser()]
@@ -29,7 +27,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.none()
         if user.is_staff:
             return User.objects.all()
-        return User.objects.filter(username=user)
+        return User.objects.filter(pk=user.pk)
 
     @action(detail=False, methods=['post'], url_path='register')
     def register(self, request):
@@ -44,6 +42,7 @@ class UserViewSet(viewsets.ModelViewSet):
         token_serializer.is_valid(raise_exception=True)
         return Response(token_serializer.validated_data, status=status.HTTP_200_OK)
 
+
 # Create your views here.
 class CategoryViewSet(viewsets.ModelViewSet):
     """
@@ -51,33 +50,21 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticated,]
+    permission_classes = [permissions.IsAuthenticated, ]
+
+    def get_queryset(self):
+        return Category.objects.filter(user=self.request.user)
 
     def list(self, request, **kwargs):
         """
         :return list of categories for the logged-in user
         """
-        user = request.user
-        if user.is_authenticated:
-            queryset = Category.objects.filter(user=user)
-            serializer = CategorySerializer(queryset, many=True)
-            return Response(serializer.data)
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        serializer = CategorySerializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
 
-    def create(self, request, *args, **kwargs):
-        user = request.user
-        if user.is_authenticated:
-            data = request.data.copy()
-            data['user'] = user.pk
-            serializer = CategorySerializer(data=data)
-            if serializer.is_valid():
-                serializer.save(user=user)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class TransactionViewSet(viewsets.ModelViewSet):
     """
@@ -85,33 +72,17 @@ class TransactionViewSet(viewsets.ModelViewSet):
     """
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-    permission_classes = [permissions.IsAuthenticated,]
+    permission_classes = [permissions.IsAuthenticated, ]
+
+    def get_queryset(self):
+        return Transaction.objects.filter(user=self.request.user)
 
     def list(self, request, **kwargs):
         """
         :return list of transactions for the logged-in user
         """
-        user = request.user
-        if user.is_authenticated:
-            queryset = Transaction.objects.filter(user=user)
-            serializer = TransactionSerializer(queryset, many=True)
-            return Response(serializer.data)
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        serializer = TransactionSerializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
 
-    def create(self, request, *args, **kwargs):
-        """
-        : create a new transaction for the logged-in user (requires category)
-        """
-        user = request.user
-        if user.is_authenticated:
-            data = request.data.copy()
-            data['user'] = user.pk
-            serializer = TransactionSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save(user=user)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

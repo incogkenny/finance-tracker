@@ -22,7 +22,6 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
 from transactions import views
 
 router = routers.DefaultRouter()

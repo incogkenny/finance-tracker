@@ -28,12 +28,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ["id", "name", "user"]
-        extra_kwargs = {"user": {"write_only": True}, }
-
-    def create(self, validated_data):
-        user = validated_data.pop("user")
-        category = Category.objects.create(user=user, **validated_data)
-        return category
+        extra_kwargs = {"user": {"write_only": True, "required": False}}
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -44,10 +39,22 @@ class TransactionSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
 
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            fields['category_id'].queryset = Category.objects.filter(user=request.user)
+        return fields
+
     class Meta:
         model = Transaction
         fields = ["id", "transaction_type", "amount", "date", "notes", "category_id", "user"]
-        extra_kwargs = {"user": {"write_only": True}}
+        extra_kwargs = {"user": {"write_only": True, "required": False}}
+
+    def validate_amount(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Amount must be greater than zero.")
+        return value
 
 
 
