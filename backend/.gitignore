@@ -1,15 +1,7 @@
- # User-specific stuff
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/dictionaries
-.idea/**/shelf
-.idea/copilot.data.migration.agent.xml
-.idea/copilot.data.migration.ask.xml
-.idea/copilot.data.migration.ask2agent.xml
-.idea/copilot.data.migration.edit.xml
-
- *.iml
- modules.xml
- .idea/misc.xml
- *.ipr
+# Django
+__pycache__/
+*.py[cod]
+*.pyc
+db.sqlite3
+*.sqlite3
+*.log
